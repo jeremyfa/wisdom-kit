@@ -1,0 +1,12 @@
+{
+    "name": "kit",
+    "url": "https://github.com/jeremyfa/wisdom-kit/",
+    "license": "MIT",
+    "tags": ["wisdom", "tracker", "tauri", "ui", "desktop", "starter"],
+    "description": "Application shell for Haxe apps built with wisdom and tracker: platform abstraction, theme, UI primitives, window chrome and bootstrap. Runs in a browser and as a Tauri desktop app.",
+    "version": "0.1.0",
+    "classPath": "src/",
+    "releasenote": "First extraction from the wisdom-app template.",
+    "contributors": ["jeremyfa"],
+    "dependencies": {}
+}

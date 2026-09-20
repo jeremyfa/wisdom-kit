@@ -1,0 +1,121 @@
+/*
+ * The kit's half of the stylesheet: theme tokens, the base layer, and the
+ * scrollbar treatment.
+ *
+ * A project imports this and adds only its own @source lines:
+ *
+ *     @import "tailwindcss";
+ *     @import "../lib/wisdom-kit/kit.css";
+ *     @source "../lib/wisdom-kit/src/kit";
+ *     @source "./app";
+ *
+ * The @source for the kit is the project's job rather than this file's,
+ * because Tailwind resolves those paths relative to the file that declares
+ * them and the kit does not know where it was mounted.
+ */
+
+/*
+ * Theme colors are CSS custom properties written on <html> at runtime by
+ * Theme.publish(), and aliased here so Tailwind generates utilities for them.
+ *
+ * Naming a token --color-t-surface gives you bg-t-surface, text-t-surface,
+ * border-t-surface and every modifier (hover:, focus:, group-hover:) plus the
+ * opacity syntax (bg-t-accent/40) for free.
+ *
+ * Plain @theme, never @theme inline: inline mode substitutes literal values
+ * into the utilities, which would freeze whichever theme was active at build
+ * time and make the runtime switch do nothing.
+ */
+@theme {
+    --color-t-background: var(--t-background);
+    --color-t-surface: var(--t-surface);
+    --color-t-surface-2: var(--t-surface-2);
+    --color-t-border: var(--t-border);
+    --color-t-border-strong: var(--t-border-strong);
+
+    --color-t-text: var(--t-text);
+    --color-t-text-muted: var(--t-text-muted);
+    --color-t-text-faint: var(--t-text-faint);
+
+    --color-t-accent: var(--t-accent);
+    --color-t-accent-text: var(--t-accent-text);
+    --color-t-accent-hover: var(--t-accent-hover);
+    --color-t-accent-soft: var(--t-accent-soft);
+
+    --color-t-button: var(--t-button);
+    --color-t-button-border: var(--t-button-border);
+    --color-t-button-text: var(--t-button-text);
+    --color-t-button-hover: var(--t-button-hover);
+
+    --color-t-success: var(--t-success);
+    --color-t-success-soft: var(--t-success-soft);
+    --color-t-warning: var(--t-warning);
+    --color-t-warning-soft: var(--t-warning-soft);
+    --color-t-danger: var(--t-danger);
+    --color-t-danger-soft: var(--t-danger-soft);
+
+    --color-t-scrollbar-thumb: var(--t-scrollbar-thumb);
+    --color-t-scrollbar-thumb-hover: var(--t-scrollbar-thumb-hover);
+
+    --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+        "Liberation Mono", monospace;
+}
+
+@layer base {
+
+    html, body {
+        margin: 0;
+        height: 100%;
+        background: var(--t-background);
+        color: var(--t-text);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        overscroll-behavior: none;
+    }
+
+    /*
+     * Native widgets (scrollbars, form controls, the text caret) follow the
+     * theme. Theme.publish() keeps this in step with the active preset.
+     */
+    html { color-scheme: light; }
+    html[data-theme="dark"] { color-scheme: dark; }
+
+    /*
+     * A desktop app should not let the user select its chrome by dragging.
+     * Anything genuinely text-like opts back in with .select-text.
+     */
+    body { user-select: none; }
+
+    :focus-visible {
+        outline: 2px solid var(--t-accent);
+        outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        * { transition: none !important; animation: none !important; }
+    }
+
+    .mono {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+    }
+
+    /*
+     * Themed scrollbars. Deliberately not `scrollbar-width: thin`, which on
+     * macOS WebKit produces a permanently visible bar that cannot be colored.
+     */
+    .scrollbar-themed { --t-thumb-visible: transparent; }
+    .scrollbar-themed:hover { --t-thumb-visible: var(--t-scrollbar-thumb); }
+    .scrollbar-themed::-webkit-scrollbar { width: 9px; height: 9px; }
+    .scrollbar-themed::-webkit-scrollbar-thumb {
+        background: var(--t-thumb-visible);
+        border-radius: 5px;
+    }
+    .scrollbar-themed::-webkit-scrollbar-thumb:hover {
+        background: var(--t-scrollbar-thumb-hover);
+    }
+    .scrollbar-themed::-webkit-scrollbar-track { background: transparent; }
+
+}

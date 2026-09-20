@@ -1,0 +1,9 @@
+[submodule "lib/wisdom"]
+	path = lib/wisdom
+	url = https://github.com/jeremyfa/wisdom.git
+[submodule "lib/tracker"]
+	path = lib/tracker
+	url = https://github.com/jeremyfa/tracker.git
+[submodule "lib/facile"]
+	path = lib/facile
+	url = https://github.com/jeremyfa/facile.git

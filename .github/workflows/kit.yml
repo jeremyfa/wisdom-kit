@@ -1,0 +1,88 @@
+name: Kit
+
+# The kit has no application of its own, so it cannot be built directly. What
+# it CAN do is prove that a project made from it works, which is a stronger
+# test than compiling the shell in isolation, because it exercises the
+# template, the clone script, the CLI and the build pipeline together.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: kit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  self-check:
+    name: Self-check
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      # The pinned Tauri CLI revision agrees with the Dockerfile, and nothing
+      # in src/kit references an application package.
+      - name: Check the kit against itself
+        run: node scripts/check-kit.mjs
+
+  build-a-project:
+    name: Build a project made from the template
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Read the Haxe version
+        id: haxe-version
+        run: echo "version=$(cat .nvmrc >/dev/null; cat template/.haxe-version)" >> "$GITHUB_OUTPUT"
+
+      - uses: krdlab/setup-haxe@v2
+        with:
+          haxe-version: ${{ steps.haxe-version.outputs.version }}
+
+      # --no-git because the generated project would otherwise try to add this
+      # very checkout as a submodule over the network. The kit is symlinked in
+      # instead, which is what the build actually needs.
+      - name: Create a project
+        run: |
+          node scripts/create-app.mjs "$RUNNER_TEMP/probe" \
+            --name "Probe" --identifier com.example.probe --no-git --yes
+
+      - name: Mount this kit into it
+        run: |
+          mkdir -p "$RUNNER_TEMP/probe/lib"
+          ln -s "$GITHUB_WORKSPACE" "$RUNNER_TEMP/probe/lib/wisdom-kit"
+
+      - name: Install and build it
+        working-directory: ${{ runner.temp }}/probe
+        run: |
+          npm install
+          npm run check-config
+          npm run build
+
+      # Tailwind emits a nearly empty stylesheet when @source misses the Haxe
+      # sources, and that defect is invisible until something renders.
+      - name: Verify the output
+        working-directory: ${{ runner.temp }}/probe
+        run: |
+          set -euo pipefail
+          for file in dist/web/index.html dist/web/frontend.js dist/web/frontend.css; do
+            [ -f "$file" ] || { echo "::error::$file was not produced"; exit 1; }
+          done
+          css=$(wc -c < dist/web/frontend.css)
+          js=$(wc -c < dist/web/frontend.js)
+          echo "frontend.css: $css bytes, frontend.js: $js bytes"
+          [ "$css" -gt 5000 ] || { echo "::error::frontend.css is only $css bytes; @source is probably missing the Haxe sources"; exit 1; }
+          [ "$js" -gt 50000 ] || { echo "::error::frontend.js is only $js bytes; the Haxe build looks empty"; exit 1; }
+          [ -f dist/web/lucide-font/lucide.woff2 ] || { echo "::error::the icon font is missing"; exit 1; }

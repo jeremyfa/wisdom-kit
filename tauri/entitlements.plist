@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+        The hardened runtime is required for notarization. These two exceptions
+        are what a WebView-based app needs: JIT for JavaScript, and unsigned
+        executable memory for the JavaScriptCore runtime.
+
+        Add nothing else here without a reason. Every entitlement widens what a
+        compromised process could do, and Apple asks about the unusual ones.
+    -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+</dict>
+</plist>

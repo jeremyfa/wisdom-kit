@@ -1,0 +1,105 @@
+name: Build frontend
+description: >
+  Install the toolchain, wire the Haxe libraries from the submodules, check the
+  configuration and build dist/web. Used by every workflow, so the frontend is
+  compiled exactly one way.
+
+inputs:
+  release:
+    description: Build minified with dead code elimination
+    required: false
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+
+    # The kit and, under it, the Haxe libraries ARE the dependencies. A
+    # checkout without them produces a confusing "Type not found : kit.App"
+    # several steps later, so make sure they are here before anything else.
+    #
+    # Normally the calling workflow already checked out with
+    # `submodules: recursive`; this is the fallback, and a no-op when it did.
+    - name: Fetch submodules
+      shell: bash
+      run: |
+        git submodule update --init --recursive
+        if [ ! -f lib/wisdom-kit/haxelib.json ]; then
+          echo "::error::lib/wisdom-kit is empty. Check out with submodules: recursive,"
+          echo "::error::and give actions/checkout a token that can read the kit if it is private."
+          exit 1
+        fi
+
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version-file: .nvmrc
+        cache: npm
+
+    # Versions come from the files in the repository, never from a literal
+    # here, so a local build and a CI build use the same toolchain.
+    - name: Read the Haxe version
+      id: haxe-version
+      shell: bash
+      run: echo "version=$(cat .haxe-version)" >> "$GITHUB_OUTPUT"
+
+    - name: Set up Haxe
+      uses: krdlab/setup-haxe@v2
+      with:
+        haxe-version: ${{ steps.haxe-version.outputs.version }}
+
+    - name: Install npm dependencies
+      shell: bash
+      # `npm ci` runs postinstall, which is where setup-haxelibs.mjs links the
+      # submodules into a project-local haxelib repository. Nothing is
+      # downloaded from haxelib.
+      run: npm ci
+
+    - name: Check the configuration
+      shell: bash
+      run: npm run check-config
+
+    - name: Build
+      shell: bash
+      run: |
+        if [ "${{ inputs.release }}" = "true" ]; then
+          npm run build:release
+        else
+          npm run build
+        fi
+
+    # Tailwind will happily emit a nearly empty stylesheet when @source misses
+    # the Haxe files, and the app then renders unstyled with no error anywhere.
+    # A size floor catches that here instead of in a released build.
+    - name: Verify the output
+      shell: bash
+      run: |
+        set -euo pipefail
+        for file in dist/web/index.html dist/web/frontend.js dist/web/frontend.css; do
+          if [ ! -f "$file" ]; then
+            echo "::error::$file was not produced"
+            exit 1
+          fi
+        done
+
+        css_bytes=$(wc -c < dist/web/frontend.css)
+        js_bytes=$(wc -c < dist/web/frontend.js)
+        echo "frontend.css: $css_bytes bytes"
+        echo "frontend.js:  $js_bytes bytes"
+
+        if [ "$css_bytes" -lt 5000 ]; then
+          echo "::error::frontend.css is only $css_bytes bytes. Tailwind's @source"
+          echo "::error::directive is probably not finding the Haxe sources, so no"
+          echo "::error::utility classes were generated."
+          exit 1
+        fi
+        if [ "$js_bytes" -lt 50000 ]; then
+          echo "::error::frontend.js is only $js_bytes bytes; the Haxe build looks empty"
+          exit 1
+        fi
+
+        # The icon font is what every button in the interface draws with.
+        if [ ! -f dist/web/lucide-font/lucide.woff2 ]; then
+          echo "::error::the icon font is missing from the build output"
+          exit 1
+        fi

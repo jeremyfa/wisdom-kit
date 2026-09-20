@@ -1,0 +1,17 @@
+[package]
+name = "wisdom-kit-tauri"
+version = "0.1.0"
+description = "The desktop host shared by every project built on wisdom-kit"
+edition = "2021"
+rust-version = "1.77.2"
+
+[dependencies]
+tauri = { version = "=2.11.5", features = [] }
+
+# One plugin per Capability the frontend declares. Removing a plugin here must
+# be matched by flipping the matching Capability to false in TauriBackend, or
+# the desktop build advertises something it can no longer do.
+tauri-plugin-dialog = "=2.7.3"
+tauri-plugin-fs = "=2.5.2"
+tauri-plugin-opener = "=2.5.5"
+tauri-plugin-clipboard-manager = "=2.3.3"

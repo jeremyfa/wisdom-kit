@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+/* Theme tokens, the base layer and the scrollbars come from the kit. */
+@import "../lib/wisdom-kit/kit.css";
+
+/*
+ * Where Tailwind looks for class names. Its extractor is a regex over source
+ * text, so it finds them inside wisdom's '<> … ' markup strings like anywhere
+ * else. But a class assembled by concatenation produces nothing, so always write
+ * whole literal class strings.
+ *
+ * These paths are relative to THIS file, which is why the kit cannot declare
+ * its own: it does not know where a project mounted it.
+ */
+@source "../lib/wisdom-kit/src/kit";
+@source "../lib/wisdom-kit/web";
+@source "./app";
+@source "../web";

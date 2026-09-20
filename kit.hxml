@@ -1,0 +1,27 @@
+# Everything a project built on this kit compiles with.
+#
+# Included by the project's own build.hxml, which adds only what is genuinely
+# its own: its class path, its main class and its output file. Change the
+# libraries or the defines here and every project picks it up on its next
+# submodule bump, which is the entire point of the kit living in one place.
+
+# wisdom, tracker and facile are consumed as LIBRARIES, not class paths.
+#
+# wisdom's extraParams.hxml carries `--macro wisdom.XMacro.makePropsObservable()`,
+# and Haxe applies that file only for a --library. A plain class path compiles
+# fine and then silently stops making @props observable, so components never
+# re-render when a parent passes new props. `kit setup` wires a project-local
+# .haxelib pointing at this kit and at the submodules under it.
+--library kit
+--library wisdom
+--library tracker
+--library facile
+
+-D wisdom_html
+
+# tracker's browser flavour: persist through localStorage, and flush observers
+# on the next microtask rather than on a frame timer.
+-D tracker_web_storage
+-D tracker_web_immediate
+
+-D js-es=6

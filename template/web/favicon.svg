@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Wisdom App">
+    <!--
+        Placeholder mark. Replace this and resources/AppIcon.png with your own
+        artwork, then run `npm run generate-icons` to regenerate the desktop
+        icon set from the PNG.
+
+        Colors are literal rather than theme tokens: a favicon is fetched by
+        the browser outside the page, so the runtime custom properties that
+        drive the rest of the interface are not available to it.
+    -->
+    <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#6366f1"/>
+            <stop offset="1" stop-color="#4338ca"/>
+        </linearGradient>
+    </defs>
+    <rect width="64" height="64" rx="14" fill="url(#g)"/>
+    <path
+        d="M32 10 C34.4 23.2 40.8 29.6 54 32 C40.8 34.4 34.4 40.8 32 54 C29.6 40.8 23.2 34.4 10 32 C23.2 29.6 29.6 23.2 32 10 Z"
+        fill="#ffffff"/>
+</svg>
