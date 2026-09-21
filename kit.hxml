@@ -18,6 +18,7 @@
 --library facile
 
 -D wisdom_html
+-D wisdom_tailwind
 
 # tracker's browser flavour: persist through localStorage, and flush observers
 # on the next microtask rather than on a frame timer.
