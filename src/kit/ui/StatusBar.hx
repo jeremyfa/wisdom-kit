@@ -14,12 +14,17 @@ import wisdom.Component;
  * pixel out of line. Aligning on the baseline is what the eye actually reads.
  * The outer row still centres that group inside the bar.
  *
- * The row is `leading-none`. With an inherited line-height each label carries
- * half-leading above and below, and baseline alignment then shifts the labels
- * against each other by the difference in their fonts' ascent. The row grows
- * downwards by that amount and the whole group reads as sitting too low in
- * the bar. With the line box reduced to the glyphs, the group is as tall as
- * the tallest glyphs and centring it lands where it looks centred.
+ * EACH LABEL IS TRIMMED TO ITS INK with `text-box: trim-both ex alphabetic`,
+ * set on the label itself: the property acts on an element's own line boxes,
+ * so on the flex row it would do nothing.
+ * A line box is sized from the font's ascent and descent, and those include
+ * room for accents above and a generous descender below, so centring the box
+ * puts the letters visibly below the middle of the bar. WebKit and Chromium
+ * also read those metrics from different font tables, so the same markup
+ * sits at different heights in the two engines. Trimming the box to the
+ * x-height and the baseline leaves only the ink, and centring that is what
+ * reads as centred. Engines without `text-box` ignore it and fall back to
+ * the `leading-none` line box, which is the closest approximation.
  *
  * The flash message slot is always in the DOM and merely empty when there is
  * nothing to say, so appearing and disappearing never changes the child count
@@ -30,9 +35,9 @@ class StatusBar extends Component {
     function render() '<>
         <div class="shrink-0 flex items-center h-7 px-4 border-t border-t-border bg-t-surface text-[11.5px] text-t-text-muted">
             <div class="flex-1 min-w-0 flex items-baseline gap-3 leading-none">
-                <span class="mono shrink-0">${Platform.isDesktop() ? 'desktop' : 'web'}</span>
-                <span class="shrink-0 text-t-text-faint">v${App.VERSION}</span>
-                <span class="flex-1 min-w-0 truncate text-t-success">
+                <span class="mono shrink-0 [text-box:trim-both_ex_alphabetic]">${Platform.isDesktop() ? 'desktop' : 'web'}</span>
+                <span class="shrink-0 text-t-text-faint [text-box:trim-both_ex_alphabetic]">v${App.VERSION}</span>
+                <span class="flex-1 min-w-0 truncate text-t-success [text-box:trim-both_ex_alphabetic]">
                     ${chrome.message != null ? chrome.message : ''}
                 </span>
                 $children
