@@ -22,7 +22,7 @@
 //! That is the whole of a project's Rust, and it means a new plugin or a
 //! change to the window chrome reaches every project by bumping the submodule.
 
-use tauri::{Builder, Wry};
+use tauri::{Builder, Manager, WindowEvent, Wry};
 
 /// Take the operating system's title bar away, each platform its own way.
 ///
@@ -42,10 +42,6 @@ use tauri::{Builder, Wry};
 /// Applied while the window is still hidden, so nothing flickers.
 #[cfg(not(target_os = "macos"))]
 fn apply_window_chrome(app: &tauri::AppHandle) {
-    // Imported here rather than at the top of the file, so the macOS build
-    // does not carry an unused import it would warn about.
-    use tauri::Manager;
-
     if let Some(window) = app.get_webview_window("main") {
         // An undecorated window on Windows keeps its resize handles through
         // tao's own hit-testing, but loses the system drop shadow. That is the
@@ -57,6 +53,25 @@ fn apply_window_chrome(app: &tauri::AppHandle) {
 #[cfg(target_os = "macos")]
 fn apply_window_chrome(_app: &tauri::AppHandle) {}
 
+/// Quit when the main window is gone.
+///
+/// Windows and Linux already end the process with its last window. macOS does
+/// not: by convention an application stays in the Dock with no window open,
+/// waiting to be given one from its menu. A kit application is a single
+/// window and has nothing to offer without it, so closing that window quits.
+///
+/// This listens for `Destroyed`, not `CloseRequested`. A project that wants
+/// to hold the window open, to ask about unsaved changes for instance, does
+/// so on `CloseRequested` with `api.prevent_close()`, and that keeps working:
+/// we only act once the window has really gone.
+fn quit_with_main_window(window: &tauri::Window, event: &WindowEvent) {
+    if window.label() == "main" {
+        if let WindowEvent::Destroyed = event {
+            window.app_handle().exit(0);
+        }
+    }
+}
+
 /// A Tauri builder with the kit's plugins and window handling already on it.
 ///
 /// Add anything of your own before calling `.run(...)`; nothing here is final.
@@ -66,6 +81,7 @@ pub fn builder() -> Builder<Wry> {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .on_window_event(quit_with_main_window)
         .setup(|app| {
             apply_window_chrome(app.handle());
             Ok(())
