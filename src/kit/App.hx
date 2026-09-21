@@ -149,21 +149,6 @@ class App {
 
         new Autorun(() -> Platform.setZoom(model.preferences.uiScale));
 
-        // Publish the macOS traffic-light inset as a CSS variable rather than
-        // as reactive markup. This is deliberate: if the title bar read the
-        // fullscreen state inside its own render, it would re-render on every
-        // fullscreen change and re-insert the children the app passed it,
-        // duplicating raw markup children. Driving a CSS variable from here
-        // keeps the title bar's markup completely static, so it works with any
-        // children and never scrambles them.
-        new Autorun(() -> {
-            final inset = (Platform.isDesktop() && Platform.isMac && !model.chrome.windowFullscreen)
-                ? '74px' : '0px';
-            Autorun.unobserve();
-            document.documentElement.style.setProperty('--kit-titlebar-inset', inset);
-            Autorun.reobserve();
-        });
-
     }
 
     static function initWisdom():Void {

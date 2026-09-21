@@ -39,21 +39,51 @@ class TitleBar extends Component {
             class="shrink-0 flex items-center gap-2 px-3 h-12 border-b border-t-border bg-t-surface"
         >
             // Room for the macOS traffic lights, which float over this bar.
-            // Its width is a CSS variable that App keeps in step with the
-            // fullscreen state, NOT a value read here, so this whole component
-            // stays static and never re-renders. That is what lets $children be
-            // any markup, raw or component, without being duplicated on a
-            // fullscreen change.
-            <div class="shrink-0" style=${{ width: 'var(--kit-titlebar-inset, 0px)' }}></div>
+            // Kept as a real element rather than as padding on the container,
+            // so that it simply disappears in fullscreen and everything slides
+            // left with nothing else moving.
+            <if ${needsTrafficLightInset()}>
+                <div class="w-[74px] shrink-0"></div>
+            </if>
 
             $children
 
             <if ${needsWindowButtons()}>
-                <WindowButtons />
+                <div class="flex items-center gap-1 ml-2 pl-2 border-l border-t-border" data-tauri-drag-region="false">
+                    <IconButton kind="minus" title="Minimize"
+                                onpress=${() -> Platform.minimizeWindow()} />
+                    <IconButton kind=${chrome.windowMaximized ? "copy" : "square"}
+                                title=${chrome.windowMaximized ? "Restore" : "Maximize"}
+                                onpress=${() -> Platform.toggleMaximizeWindow()} />
+                    <IconButton kind="x" title="Close" tone="danger"
+                                onpress=${() -> Platform.closeWindow()} />
+                </div>
             </if>
         </div>
     ';
 
+    /**
+     * macOS only, and only while the traffic lights are actually on screen.
+     *
+     * The numbers here and in tauri.conf.json are a matched pair, measured
+     * against this bar's 48px height rather than guessed:
+     *
+     *   trafficLightPosition x=14  puts the buttons at x 14..73
+     *   this 74px spacer + the bar's 12px of padding + an 8px gap
+     *                              puts the content at x 94, a clear 20px away
+     *   trafficLightPosition y=26  centres the buttons at y 23.8, against a
+     *                              bar centre of 24
+     *
+     * That y is NOT the top of the buttons. macOS applies it as an offset
+     * from its own default, so it reads about nine pixels higher than the
+     * number suggests. Change this bar's height and it has to be re-measured,
+     * not recomputed.
+     */
+    function needsTrafficLightInset():Bool {
+
+        return Platform.isDesktop() && Platform.isMac && !chrome.windowFullscreen;
+
+    }
 
     /**
      * Absent rather than disabled in a browser and on macOS: on macOS the real

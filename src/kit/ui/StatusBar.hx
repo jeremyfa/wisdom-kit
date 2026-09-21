@@ -14,6 +14,13 @@ import wisdom.Component;
  * pixel out of line. Aligning on the baseline is what the eye actually reads.
  * The outer row still centres that group inside the bar.
  *
+ * The row is `leading-none`. With an inherited line-height each label carries
+ * half-leading above and below, and baseline alignment then shifts the labels
+ * against each other by the difference in their fonts' ascent. The row grows
+ * downwards by that amount and the whole group reads as sitting too low in
+ * the bar. With the line box reduced to the glyphs, the group is as tall as
+ * the tallest glyphs and centring it lands where it looks centred.
+ *
  * The flash message slot is always in the DOM and merely empty when there is
  * nothing to say, so appearing and disappearing never changes the child count
  * and wisdom keeps matching nodes across renders.
@@ -21,8 +28,8 @@ import wisdom.Component;
 class StatusBar extends Component {
 
     function render() '<>
-        <div class="shrink-0 flex items-center h-7 px-3 border-t border-t-border bg-t-surface text-[11.5px] text-t-text-muted">
-            <div class="flex-1 min-w-0 flex items-baseline gap-3">
+        <div class="shrink-0 flex items-center h-7 px-4 border-t border-t-border bg-t-surface text-[11.5px] text-t-text-muted">
+            <div class="flex-1 min-w-0 flex items-baseline gap-3 leading-none">
                 <span class="mono shrink-0">${Platform.isDesktop() ? 'desktop' : 'web'}</span>
                 <span class="shrink-0 text-t-text-faint">v${App.VERSION}</span>
                 <span class="flex-1 min-w-0 truncate text-t-success">
