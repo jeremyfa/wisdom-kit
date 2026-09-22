@@ -8,8 +8,9 @@ import js.html.KeyboardEvent;
  * Keyboard shortcuts: one listener, one table.
  *
  * The shell owns the dispatching and a few bindings that belong to any app
- * (the zoom). Your application passes its own table to `App.start` and they
- * are concatenated, so `Keys.all` is what the About screen should list.
+ * (the zoom, the settings). Your application passes its own table to
+ * `App.start` and they are concatenated, so `Keys.all` is what the About
+ * screen should list.
  *
  * Three rules are enforced here rather than left to each binding, because
  * getting any of them wrong is the kind of bug you only notice from a user
@@ -22,7 +23,9 @@ import js.html.KeyboardEvent;
  *   A dialog is modal. While one is open, Escape dismisses it and everything
  *   else is swallowed, so nothing behind it can act.
  *
- *   Escape unwinds one layer at a time, innermost first.
+ *   Escape unwinds one layer at a time, innermost first: the dialog, then
+ *   the shell's settings popup, then whatever the application's `onEscape`
+ *   wants to close.
  */
 class Keys {
 
@@ -54,7 +57,8 @@ class Keys {
         return [
             { key: '=', description: 'Zoom in', action: () -> adjustScale(0.1) },
             { key: '-', description: 'Zoom out', action: () -> adjustScale(-0.1) },
-            { key: '0', description: 'Reset zoom', action: () -> preferences.uiScale = 1.0 }
+            { key: '0', description: 'Reset zoom', action: () -> preferences.uiScale = 1.0 },
+            { key: ',', description: 'Settings', action: () -> chrome.settingsOpen = true }
         ];
 
     }
@@ -76,6 +80,13 @@ class Keys {
                 Dialog.dismiss();
                 e.preventDefault();
             }
+            return;
+        }
+
+        if (e.key == 'Escape' && chrome.settingsOpen) {
+            // The shell's own popup, closed here so no application has to.
+            chrome.settingsOpen = false;
+            e.preventDefault();
             return;
         }
 

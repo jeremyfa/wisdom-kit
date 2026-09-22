@@ -89,10 +89,25 @@ ambiently, anywhere in your code:
 | `model` | your own application state |
 
 `chrome` is the one worth a word. It is everything the kit manages on your
-behalf around your content: the dialog currently open, the short message shown
-in the status bar, and whether the window is fullscreen or maximised. Your own
-state goes in `model`, and the frame's state lives in `chrome` so your model
-never has to carry it.
+behalf around your content: the dialog currently open, whether the settings
+popup is open, the short message shown in the status bar, and whether the
+window is fullscreen or maximised. Your own state goes in `model`, and the
+frame's state lives in `chrome` so your model never has to carry it.
+
+The settings popup is part of the kit, as `kit.ui.SettingsPopup`. It holds the
+theme (light, dark or follow the system) and the interface scale, both saved in
+`preferences`. The kit opens it on ⌘, (Ctrl+, elsewhere) and closes it on
+Escape. A new project mounts it and gives it a button in the title bar, and
+that is all it has to do. To add your own settings, put them between its tags:
+
+```haxe
+<SettingsPopup>
+    <SectionHeader label="Data" />
+    <LabeledRow label="Notes" hint="Removes every note on this device">
+        <Button label="Clear" variant="danger" onpress=${clearNotes} />
+    </LabeledRow>
+</SettingsPopup>
+```
 
 When the kit needs something only your app can provide, you hand it over at
 startup rather than the kit guessing:

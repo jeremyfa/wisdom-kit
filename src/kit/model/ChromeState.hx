@@ -26,6 +26,15 @@ class ChromeState extends BaseModel {
      */
     @observe public var message:String = null;
 
+    /**
+     * Whether the settings popup is open.
+     *
+     * The popup itself is `kit.ui.SettingsPopup`, and the shortcut that opens
+     * it and the Escape that closes it live in `kit.Keys`, so an application
+     * only has to mount it. See the template's `Main.hx`.
+     */
+    @observe public var settingsOpen:Bool = false;
+
     /** Set once the first paint is ready, so the desktop window can be shown. */
     @observe public var appReady:Bool = false;
 
