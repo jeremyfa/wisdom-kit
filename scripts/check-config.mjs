@@ -47,6 +47,7 @@ checkMainRs();
 checkHaxeMain();
 checkKitMounted();
 checkTauriPlugins();
+checkOpenerScope();
 checkLocalCheckouts();
 
 if (problems.length > 0) {
@@ -151,6 +152,24 @@ function checkKitMounted() {
     const mount = linked ? KIT_MOUNT : path.relative(root, KIT).split(path.sep).join('/');
     if (!text.includes(`${mount}/kit.hxml`)) {
         problems.push(`build.hxml: should include ${mount}/kit.hxml`);
+    }
+
+}
+
+/**
+ * opener:allow-open-url alone allows the command with an EMPTY scope, so every
+ * URL is refused and Platform.openUrl fails with no visible sign. It needs
+ * opener:allow-default-urls (http, https, mailto, tel) or a scope of its own.
+ */
+function checkOpenerScope() {
+
+    const file = 'src-tauri/capabilities/default.json';
+    const text = readText(file, true);
+    if (text == null) return;
+    const scoped = text.includes('"opener:allow-default-urls"') || text.includes('"opener:default"')
+        || /"identifier"\s*:\s*"opener:allow-open-url"/.test(text);
+    if (text.includes('"opener:allow-open-url"') && !scoped) {
+        problems.push(`${file}: opener:allow-open-url has no URL scope, so every link is refused. Add "opener:allow-default-urls"`);
     }
 
 }
