@@ -45,8 +45,8 @@ checkTauriPlugins();
 if (problems.length > 0) {
     console.error('Configuration is inconsistent with project.config.sh:\n');
     for (const p of problems) console.error(`  ${p}`);
-    console.error('\nEdit project.config.sh and the file above so they agree,');
-    console.error('or run `npm run create-app` to start a project under a new name.');
+    console.error('\nRun `npm run sync-config` (every build does) to write the names in');
+    console.error('project.config.sh into those files, or fix the file by hand.');
     process.exit(1);
 }
 

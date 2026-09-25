@@ -47,6 +47,13 @@ class App {
      */
     public static inline final ICON:String = kit.macros.ConfigMacro.get('APP_ICON', 'sparkles');
 
+    /**
+     * APP_SLUG from project.config.sh, taken at compile time. The natural
+     * local storage key: renaming the project then leaves no key with the
+     * old name, and starts from empty storage.
+     */
+    public static inline final SLUG:String = kit.macros.ConfigMacro.get('APP_SLUG', 'app');
+
     public static var wisdom(default, null):Wisdom;
 
     public static var theme(default, null):Theme;

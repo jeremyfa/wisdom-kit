@@ -48,6 +48,7 @@ const COMMANDS = {
 
     'check-config': () => node('check-config.mjs', rest),
 
+    'sync-config': () => node('sync-config.mjs', rest),
     'sync-version': () => node('sync-version.mjs', rest),
 
     clean: () => node('clean.mjs', rest),
@@ -71,6 +72,9 @@ const COMMANDS = {
         // to run before every full build and re-heals a stale checkout.
         if (!rest.includes('--quiet')) node('setup-haxelibs.mjs', ['--soft']);
 
+        // Names first: sync-version finds the crate in Cargo.lock by the
+        // name sync-config writes.
+        node('sync-config.mjs', []);
         node('sync-version.mjs', []);
         node('copy-static.mjs', []);
         haxe(release ? 'build.release.hxml' : 'build.hxml');
@@ -192,8 +196,9 @@ The wisdom-kit command line. Run from a project directory.
   clean             remove dist                (--all also clears .haxelib and target)
 
   check-config      verify every file agrees with project.config.sh
+  sync-config       push project.config.sh's names into npm, Cargo and Tauri
   sync-version      push package.json's version into Cargo and Tauri
-  generate-icons    rebuild the desktop icons from resources/AppIcon.png
+  generate-icons    rebuild the desktop icons from APP_ICON or resources/AppIcon.png
 
   export mac        macOS universal, signed
   export linux      .deb, .rpm, .AppImage      (x64 | arm64)
