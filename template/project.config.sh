@@ -32,6 +32,18 @@ APP_MAIN_CLASS="app.Main"
 #   APP_HAXE_PACKAGE  your Haxe package              (default: app)
 #   WEB_DEV_PORT      npm run dev:web                (default: 5173)
 
+# The app icon: any Lucide icon (https://lucide.dev), by name. `npm run
+# generate-icons` draws every desktop icon and the favicon from it, and the
+# title bar shows it too. Empty: the icons come from resources/AppIcon.png.
+APP_ICON="sparkles"
+# Background: one colour, or two separated by a space for a top-to-bottom
+# gradient. Then the colour of the icon itself.
+APP_ICON_BACKGROUND="#6366f1 #4338ca"
+APP_ICON_FOREGROUND="#ffffff"
+# Stroke width on Lucide's 24-unit grid. A little heavier than the 2 of the
+# interface keeps the icon legible at 16px.
+APP_ICON_STROKE="2.25"
+
 # Optional itch.io target "<user>/<project>" for `npm run publish-itchio`.
 # Empty disables publishing with a helpful message rather than a failure.
 ITCH_TARGET=""

@@ -36,7 +36,7 @@ class Main implements X {
                         // is not a button moves the window. The button cluster
                         // on the right opts out, so its gaps do not drag either.
                         <div class="flex-1 min-w-0 flex items-center gap-2">
-                            <Icon kind="sparkles" size=16 display="text-t-accent" />
+                            <Icon kind=${App.ICON} size=16 display="text-t-accent" />
                             <span class="text-[14px] font-semibold truncate">Wisdom App</span>
                             <div class="flex-1"></div>
                             <div class="flex items-center gap-1" data-tauri-drag-region="false">

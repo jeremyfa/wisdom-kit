@@ -81,6 +81,12 @@ export function readConfig(root, kitDir) {
 
         WEB_DEV_PORT: declared.WEB_DEV_PORT || '5173',
         ITCH_TARGET: declared.ITCH_TARGET || '',
+        // The app icon, drawn from a Lucide icon. Empty means the icons come
+        // from resources/AppIcon.png instead.
+        APP_ICON: declared.APP_ICON || '',
+        APP_ICON_BACKGROUND: declared.APP_ICON_BACKGROUND || '#6366f1 #4338ca',
+        APP_ICON_FOREGROUND: declared.APP_ICON_FOREGROUND || '#ffffff',
+        APP_ICON_STROKE: declared.APP_ICON_STROKE || '2.25',
 
         /** Which keys the project actually wrote down, for the clone script. */
         declared: parseShellConfig(file)

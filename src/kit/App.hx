@@ -40,6 +40,13 @@ class App {
     /** Version, taken from package.json at compile time. */
     public static inline final VERSION:String = kit.macros.VersionMacro.get();
 
+    /**
+     * The Lucide icon the app is drawn from (APP_ICON in project.config.sh),
+     * taken at compile time, for the title bar to show the same mark as the
+     * Dock. "sparkles" when the project sets none.
+     */
+    public static inline final ICON:String = kit.macros.ConfigMacro.get('APP_ICON', 'sparkles');
+
     public static var wisdom(default, null):Wisdom;
 
     public static var theme(default, null):Theme;

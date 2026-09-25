@@ -80,6 +80,10 @@ APP_HAXE_PACKAGE="${APP_HAXE_PACKAGE:-app}"
 APP_MAIN_CLASS="${APP_MAIN_CLASS:-app.Main}"
 WEB_DEV_PORT="${WEB_DEV_PORT:-5173}"
 ITCH_TARGET="${ITCH_TARGET:-}"
+APP_ICON="${APP_ICON:-}"
+APP_ICON_BACKGROUND="${APP_ICON_BACKGROUND:-#6366f1 #4338ca}"
+APP_ICON_FOREGROUND="${APP_ICON_FOREGROUND:-#ffffff}"
+APP_ICON_STROKE="${APP_ICON_STROKE:-2.25}"
 
 # The version lives in package.json and nowhere else. Parsed rather than
 # `node -p` so the export scripts keep working without node on PATH, which
