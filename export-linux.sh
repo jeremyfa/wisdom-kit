@@ -265,12 +265,21 @@ rename_if_present "$BUNDLE_DIR/appimage/${APP_PRODUCT_NAME}_${VERSION}_${APPIMAG
 if [ -f "$APPIMAGE_PATH" ]; then
     step "Checking the AppImage"
     EXTRACT_DIR="$(mktemp -d)"
-    ( cd "$EXTRACT_DIR" && "$APPIMAGE_PATH" --appimage-extract >/dev/null 2>&1 ) || true
+    EXTRACT_LOG="$EXTRACT_DIR/extract.log"
+    ( cd "$EXTRACT_DIR" && "$APPIMAGE_PATH" --appimage-extract >"$EXTRACT_LOG" 2>&1 ) || true
 
-    if [ -d "$EXTRACT_DIR/squashfs-root" ]; then
-        ROOT="$EXTRACT_DIR/squashfs-root"
-        HOOK="$ROOT/bin/01-path-mapping-hardcoded.src.hook"
-        LIB_ID="$(grep '_tmp_lib=' "$HOOK" 2>/dev/null | head -1 | cut -d= -f2 || true)"
+    # The folder the runtime extracted to: squashfs-root for the classic
+    # runtime, another name for the DwarFS one the sharun bundler uses. It is
+    # whichever holds the AppRun.
+    ROOT=""
+    for candidate in "$EXTRACT_DIR"/*/; do
+        if [ -e "${candidate}AppRun" ] || [ -e "${candidate}AppRun.sh" ]; then ROOT="${candidate%/}"; break; fi
+    done
+
+    if [ -n "$ROOT" ]; then
+        # 01-path-mapping-hardcoded.src.hook in older sharun releases, .hook since.
+        HOOK="$(ls "$ROOT"/bin/*path-mapping-hardcoded*.hook 2>/dev/null | head -1)"
+        LIB_ID="$(grep -h '_tmp_lib=' "$HOOK" 2>/dev/null | head -1 | cut -d= -f2 || true)"
 
         BINARY_OK=no
         [ -n "$(find "$ROOT" -name "$APP_CRATE_NAME" -type f 2>/dev/null | head -1)" ] && BINARY_OK=yes
@@ -284,13 +293,20 @@ if [ -f "$APPIMAGE_PATH" ]; then
         say "  binary: $BINARY_OK   lib id: ${LIB_ID:-missing}   tmp symlink: $SYMLINK_OK   webkit: $WEBKIT_OK"
 
         if [ "$BINARY_OK" != yes ] || [ "$SYMLINK_OK" != yes ] || [ "$WEBKIT_OK" != yes ]; then
+            say "  extracted to: $ROOT"
+            say "  top level: $(ls "$ROOT" | tr '\n' ' ')"
+            say "  hook: ${HOOK:-none}"
             rm -rf "$EXTRACT_DIR"
             die "the AppImage is missing load-bearing pieces" \
                 "It would build, ship, and then show a white screen." \
                 "Check the pinned Tauri CLI revision in project.config.sh."
         fi
     else
-        warn "could not extract the AppImage to check it"
+        warn "could not extract the AppImage to check it (normal on macOS, which cannot run it)"
+        if [ "$HOST" = "linux" ]; then
+            say "  extraction output:"; tail -5 "$EXTRACT_LOG" | sed 's/^/    /'
+            say "  extracted: $(ls "$EXTRACT_DIR" | tr '\n' ' ')"
+        fi
     fi
     rm -rf "$EXTRACT_DIR"
 fi
