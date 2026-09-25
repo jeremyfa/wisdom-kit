@@ -17,7 +17,8 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const KIT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // The project being built. npm runs scripts from the directory holding
@@ -30,9 +31,14 @@ if (!fs.existsSync(file)) {
     process.exit(1);
 }
 
+// Resolved from the project, which lists esbuild in its devDependencies. A
+// bare import would resolve from this file instead, which is wherever the kit
+// really lives: outside the project when lib/wisdom-kit is a link to a local
+// checkout (project.local.sh).
 let esbuild;
 try {
-    esbuild = await import('esbuild');
+    const require = createRequire(path.join(root, 'package.json'));
+    esbuild = await import(pathToFileURL(require.resolve('esbuild')).href);
 }
 catch {
     console.warn('  esbuild not installed; shipping the unminified bundle');

@@ -81,6 +81,9 @@ const COMMANDS = {
         // name sync-config writes.
         node('sync-config.mjs', []);
         node('sync-version.mjs', []);
+        // A release starts from an empty dist/web, so nothing a development
+        // build left there (a source map, a file since removed) ships with it.
+        if (release) fs.rmSync(path.join(ROOT, 'dist', 'web'), { recursive: true, force: true });
         node('copy-static.mjs', []);
         haxe(release ? 'build.release.hxml' : 'build.hxml');
         if (release) node('minify.mjs', []);

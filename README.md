@@ -57,6 +57,22 @@ These all run through the kit rather than being spelled out in your
 submodule. `node lib/wisdom-kit/cli.mjs --help` lists them from inside a
 project.
 
+## Publishing on the web
+
+```bash
+npm run build:release
+```
+
+Then upload the contents of `dist/web` anywhere: the root of a domain, or any
+folder below it (`example.com/some/folder/my-app/`). Every path in the page is
+relative, so it works from wherever it is served. `build:release` starts from
+an empty `dist/web`, minifies the bundle and leaves out the source map, so the
+folder holds only what the page loads.
+
+Link to the folder with its trailing slash (`.../my-app/`). Most hosts redirect
+`.../my-app` there on their own; one that does not would resolve the relative
+paths against the parent folder.
+
 ## Working on the kit locally
 
 To work on the kit, or on wisdom, tracker or facile, from their own checkouts

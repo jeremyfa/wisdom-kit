@@ -35,7 +35,10 @@ if (!fs.existsSync(kitWeb)) {
     console.error(`copy-static: the kit has no web/ at ${kitWeb}`);
     process.exit(1);
 }
-fs.cpSync(kitWeb, to, { recursive: true });
+// lucide-font/info.json maps icon names to glyphs for generate-icons, at build
+// time. The page never loads it, so it is not shipped.
+const buildOnly = new Set([path.join(kitWeb, 'lucide-font', 'info.json')]);
+fs.cpSync(kitWeb, to, { recursive: true, filter: source => !buildOnly.has(source) });
 
 // A project with nothing of its own to add is perfectly normal.
 const projectWeb = path.join(root, 'web');
