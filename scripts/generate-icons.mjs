@@ -44,6 +44,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readConfig } from './config.mjs';
+import { tool } from './tools.mjs';
 
 const KIT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // The project being built. npm runs scripts from the directory holding
@@ -66,6 +67,18 @@ function fail(message, ...details) {
 
 function run(command, args, options = {}) {
     return execFileSync(command, args, { cwd: root, stdio: 'inherit', ...options });
+}
+
+/** The project's Tauri CLI, without npx. See tools.mjs. */
+function tauri(args) {
+    let command;
+    try {
+        command = tool(root, '@tauri-apps/cli', 'tauri');
+    }
+    catch (error) {
+        fail(error.message);
+    }
+    return run(command[0], [command[1], ...args]);
 }
 
 function has(command) {
@@ -184,10 +197,10 @@ function fromLucide(config) {
 
         // Pass 1: everything, full-bleed.
         console.log(`  drawing the icon set from the Lucide icon "${name}"`);
-        run('npx', ['tauri', 'icon', full]);
+        tauri(['icon', full]);
 
         // Pass 2: macOS only, from the inset drawing.
-        run('npx', ['tauri', 'icon', inset, '-o', macIcons]);
+        tauri(['icon', inset, '-o', macIcons]);
         const icns = path.join(macIcons, 'icon.icns');
         if (!fs.existsSync(icns)) fail('the second pass produced no icon.icns');
         fs.copyFileSync(icns, path.join(ICONS_DIR, 'icon.icns'));
@@ -228,7 +241,7 @@ function fromPng() {
 
     // Pass 1: everything, from the full-bleed source.
     console.log('  generating the icon set from resources/AppIcon.png');
-    run('npx', ['tauri', 'icon', path.relative(root, SOURCE)]);
+    tauri(['icon', path.relative(root, SOURCE)]);
 
     // Pass 2: macOS only, from an inset copy.
     const work = fs.mkdtempSync(path.join(os.tmpdir(), 'icons-'));
@@ -246,7 +259,7 @@ function fromPng() {
             inset
         ]);
 
-        run('npx', ['tauri', 'icon', inset, '-o', macIcons]);
+        tauri(['icon', inset, '-o', macIcons]);
 
         const icns = path.join(macIcons, 'icon.icns');
         if (!fs.existsSync(icns)) fail('the second pass produced no icon.icns');

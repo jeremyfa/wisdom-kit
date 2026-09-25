@@ -31,6 +31,7 @@ import path from 'node:path';
 import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { defaultLibName } from './config.mjs';
+import { npm } from './tools.mjs';
 
 const KIT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TEMPLATE = path.join(KIT, 'template');
@@ -637,8 +638,17 @@ function listTextFiles(root) {
 }
 
 function run(command, args, cwd, allowFailure = false, stdio = 'pipe') {
+    // npm is npm.cmd on Windows, which needs a shell or its own script run
+    // by Node. See tools.mjs.
+    let shell = false;
+    if (command === 'npm') {
+        const runner = npm();
+        command = runner.command;
+        args = [...runner.args, ...args];
+        shell = runner.shell;
+    }
     try {
-        return execFileSync(command, args, { cwd, encoding: 'utf8', stdio }) || '';
+        return execFileSync(command, args, { cwd, encoding: 'utf8', stdio, shell }) || '';
     }
     catch (error) {
         if (allowFailure) return '';

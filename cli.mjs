@@ -25,6 +25,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { tool } from './scripts/tools.mjs';
 
 const KIT = path.resolve(path.dirname(fileURLToPath(import.meta.url)));
 const ROOT = process.cwd();
@@ -90,11 +91,11 @@ const COMMANDS = {
         tailwind(release);
     },
 
-    dev: () => watchAnd(['npx', 'tauri', 'dev']),
+    dev: () => watchAnd([...projectTool('@tauri-apps/cli', 'tauri'), 'dev']),
 
-    'dev:web': () => watchAnd(['node', path.join(KIT, 'scripts', 'serve-web.mjs')]),
+    'dev:web': () => watchAnd([process.execPath, path.join(KIT, 'scripts', 'serve-web.mjs')]),
 
-    tauri: () => run('npx', ['tauri', ...rest]),
+    tauri: () => runTool('@tauri-apps/cli', 'tauri', rest),
 
     export: () => {
         const target = rest[0];
@@ -130,9 +131,9 @@ function tailwind(minify) {
     const input = ['src/app.css', 'src/styles.css'].find(f => fs.existsSync(path.join(ROOT, f)));
     if (!input) fail('No src/app.css to build the stylesheet from');
 
-    const args = ['@tailwindcss/cli', '-i', './' + input, '-o', './dist/web/frontend.css'];
+    const args = ['-i', './' + input, '-o', './dist/web/frontend.css'];
     if (minify) args.push('--minify');
-    run('npx', args);
+    runTool('@tailwindcss/cli', 'tailwindcss', args);
 }
 
 /**
@@ -148,17 +149,18 @@ function watchAnd(foreground) {
     COMMANDS.build();
 
     const watch = [
-        'npx', 'chokidar',
+        ...projectTool('chokidar-cli', 'chokidar'),
         'src/**/*.hx', 'src/**/*.css', 'web/**',
         path.relative(ROOT, path.join(KIT, 'src', 'kit')) + '/**/*.hx',
-        '-c', `node ${JSON.stringify(path.join(KIT, 'cli.mjs'))} build --quiet`
+        '-c', `${quote(process.execPath)} ${quote(path.join(KIT, 'cli.mjs'))} build --quiet`
     ];
 
     // concurrently takes each side as one shell command line. Both are built
     // token by token and quoted per token, so a path with a space stays one
     // argument and a program name never merges with its first argument.
-    const result = spawnSync('npx', [
-        'concurrently', '--prefix', 'none', '--kill-others',
+    const [node, concurrently] = projectTool('concurrently', 'concurrently');
+    const result = spawnSync(node, [
+        concurrently, '--prefix', 'none', '--kill-others',
         watch.map(quote).join(' '),
         foreground.map(quote).join(' ')
     ], { cwd: ROOT, stdio: 'inherit' });
@@ -176,6 +178,21 @@ function node(script, args) {
 function sh(script, args) {
     if (!fs.existsSync(script)) fail(`${script} is missing from the kit`);
     run('bash', [script, ...args]);
+}
+
+/** [node, script] for a tool installed in the project. See scripts/tools.mjs. */
+function projectTool(pkg, bin) {
+    try {
+        return tool(ROOT, pkg, bin);
+    }
+    catch (error) {
+        fail(error.message);
+    }
+}
+
+function runTool(pkg, bin, args) {
+    const [node, script] = projectTool(pkg, bin);
+    run(node, [script, ...args]);
 }
 
 function run(command, args) {
