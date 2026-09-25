@@ -187,10 +187,25 @@ else
     docker build --platform "$DOCKER_PLATFORM" \
         -t "$DEB_IMAGE" -f "$KIT_DIR/docker/linux.Dockerfile" "$KIT_DIR/docker/"
 
+    # A kit linked to a local checkout (project.local.sh) is a symbolic link
+    # out of the project, which the container would find dangling: only the
+    # project is mounted. Mount the checkout where the link leads inside the
+    # container, so the link resolves there as it does here.
+    KIT_MOUNT_ARGS=()
+    if [ -L "$ROOT_DIR/lib/wisdom-kit" ]; then
+        KIT_LINK="$(readlink "$ROOT_DIR/lib/wisdom-kit")"
+        case "$KIT_LINK" in
+            /*) KIT_IN_CONTAINER="$KIT_LINK" ;;
+            *)  KIT_IN_CONTAINER="$(cd / && python3 -c 'import os,sys; print(os.path.normpath(sys.argv[1]))' "/workspace/lib/$KIT_LINK")" ;;
+        esac
+        KIT_MOUNT_ARGS=(-v "$KIT_DIR:$KIT_IN_CONTAINER")
+    fi
+
     step "Building .deb and .rpm in Docker ($DOCKER_PLATFORM)"
     docker run --rm \
         --platform "$DOCKER_PLATFORM" \
         -v "$ROOT_DIR:/workspace" \
+        ${KIT_MOUNT_ARGS[@]+"${KIT_MOUNT_ARGS[@]}"} \
         -v "${DOCKER_PREFIX}-cargo-${ARCH}:/usr/local/cargo/registry" \
         -v "${DOCKER_PREFIX}-tauri-cache-${ARCH}:/root/.cache/tauri" \
         -w /workspace \
@@ -209,6 +224,7 @@ else
     docker run --rm \
         --platform "$DOCKER_PLATFORM" \
         -v "$ROOT_DIR:/workspace" \
+        ${KIT_MOUNT_ARGS[@]+"${KIT_MOUNT_ARGS[@]}"} \
         -v "${DOCKER_PREFIX}-cargo-appimage-${ARCH}:/usr/local/cargo/registry" \
         -v "${DOCKER_PREFIX}-tauri-cache-appimage-${ARCH}:/root/.cache/tauri" \
         -w /workspace \
