@@ -239,7 +239,9 @@ ensure_bundles_dir() {
 # NEXT build, and every bundle would ship stamped one release behind.
 prepare_build() {
     need_cmd node "Install Node (see .nvmrc for the expected version)."
-    node "$KIT_DIR/scripts/check-config.mjs"
+    # --release: refuse to ship a build of local checkouts (project.local.sh)
+    # that are not exactly the pushed, recorded commits.
+    node "$KIT_DIR/scripts/check-config.mjs" --release
     node "$KIT_DIR/scripts/sync-version.mjs"
 }
 

@@ -26,6 +26,7 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { libraryDir } from './local.mjs';
 
 const KIT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // The project being built. npm runs scripts from the directory holding
@@ -34,12 +35,15 @@ const root = process.cwd();
 
 const soft = process.argv.includes('--soft');
 
-/** Library name -> the directory holding its haxelib.json. */
+/**
+ * Library name -> the directory holding its haxelib.json: the kit's
+ * submodule, or the local checkout project.local.sh names (see local.mjs).
+ */
 const LIBS = {
     kit: KIT,
-    wisdom: path.join(KIT, 'lib', 'wisdom'),
-    tracker: path.join(KIT, 'lib', 'tracker'),
-    facile: path.join(KIT, 'lib', 'facile')
+    wisdom: libraryDir(root, KIT, 'wisdom'),
+    tracker: libraryDir(root, KIT, 'tracker'),
+    facile: libraryDir(root, KIT, 'facile')
 };
 
 function say(message) {

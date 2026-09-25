@@ -1,0 +1,16 @@
+# Use local checkouts instead of the submodules, on this machine only.
+#
+# Copy this file to project.local.sh (gitignored), keep the lines you want,
+# and run `npm run sync-local`. Paths are relative to the project. Remove a
+# line, or the file, and run it again to go back to the submodule.
+#
+# The kit: lib/wisdom-kit becomes a link to the checkout, and the project's
+# pointer to the kit follows the checkout's commit once it is pushed.
+KIT_LOCAL_DIR="../wisdom-kit"
+#
+# The kit's libraries: haxelib uses these checkouts. The kit's own pointers
+# to them are never changed from here; sync-local reports when a checkout is
+# not on the version the kit pins.
+WISDOM_LOCAL_DIR="../wisdom"
+TRACKER_LOCAL_DIR="../tracker"
+FACILE_LOCAL_DIR="../facile"

@@ -45,8 +45,10 @@ The full list:
 | `npm run dev` | build, watch, and open the desktop window |
 | `npm run dev:web` | build, watch, and serve `dist/web` |
 | `npm run check-config` | check every file agrees on the project's names |
+| `npm run sync-config` | copy `project.config.sh`'s names into npm, Cargo and Tauri |
+| `npm run sync-local` | use the local checkouts named in `project.local.sh` |
 | `npm run sync-version` | copy `package.json`'s version into Cargo and Tauri |
-| `npm run generate-icons` | rebuild the desktop icons from `resources/AppIcon.png` |
+| `npm run generate-icons` | draw the desktop icons from `APP_ICON`, or `resources/AppIcon.png` |
 | `npm run export mac` | build distributables (also `linux`, `windows`, `all`) |
 | `npm run sign-mac` | notarize and staple the macOS build |
 
@@ -54,6 +56,35 @@ These all run through the kit rather than being spelled out in your
 `package.json`, so when the build gains a step, you get it by updating the
 submodule. `node lib/wisdom-kit/cli.mjs --help` lists them from inside a
 project.
+
+## Working on the kit locally
+
+To work on the kit, or on wisdom, tracker or facile, from their own checkouts
+next to the project rather than through the submodules, copy
+`project.local.sh.example` to `project.local.sh` (it is gitignored), keep the
+lines you need, and run:
+
+```bash
+npm run sync-local
+```
+
+- `lib/wisdom-kit` becomes a link to `KIT_LOCAL_DIR`, and git still sees the
+  submodule. The project's pointer to the kit then follows that checkout: each
+  run commits `Update wisdom-kit` when it moved, but only once that commit is
+  pushed, so a clone of the project can always fetch it.
+- `WISDOM_LOCAL_DIR` and the others point haxelib at those checkouts. The kit's
+  own pointers to them are left alone, since a project may not be allowed to
+  commit to the kit: `sync-local` reports a checkout that is not on the version
+  the kit pins, and whoever maintains the kit updates it there.
+- Remove a line, or the whole file, and run it again to go back to the
+  submodule, on the commit last recorded.
+
+`npm run build` says when the checkouts moved since the last sync, and the
+export scripts refuse to ship a build of checkouts that are not exactly pushed,
+recorded commits.
+
+The first time, from a project whose submodule predates `sync-local`, run it
+from the checkout instead: `node ../wisdom-kit/cli.mjs sync-local`.
 
 ## What is in the kit
 

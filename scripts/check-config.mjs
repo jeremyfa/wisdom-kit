@@ -18,6 +18,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readConfig } from './config.mjs';
+import {
+    KIT_MOUNT, LIBRARIES, checkoutWarnings, head, onRemote, pinned, readLocal, recorded, short, staleness
+} from './local.mjs';
 
 const KIT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // The project being checked. npm runs scripts from the directory holding
@@ -34,6 +37,9 @@ catch (error) {
 }
 
 const problems = [];
+// Problems with the local checkouts of project.local.sh, which call for
+// another remedy than the names.
+let localProblems = 0;
 
 checkTauriConf();
 checkCargoToml();
@@ -41,12 +47,20 @@ checkMainRs();
 checkHaxeMain();
 checkKitMounted();
 checkTauriPlugins();
+checkLocalCheckouts();
 
 if (problems.length > 0) {
     console.error('Configuration is inconsistent with project.config.sh:\n');
     for (const p of problems) console.error(`  ${p}`);
-    console.error('\nRun `npm run sync-config` (every build does) to write the names in');
-    console.error('project.config.sh into those files, or fix the file by hand.');
+    if (localProblems < problems.length) {
+        console.error('\nRun `npm run sync-config` (every build does) to write the names in');
+        console.error('project.config.sh into those files, or fix the file by hand.');
+    }
+    if (localProblems > 0) {
+        console.error('\nA release must be built from commits anybody can fetch. Commit and push the');
+        console.error('local checkouts, then run `npm run sync-local`, or remove project.local.sh to');
+        console.error('build from the submodules.');
+    }
     process.exit(1);
 }
 
@@ -130,10 +144,50 @@ function checkKitMounted() {
     const text = readText('build.hxml');
     if (text == null) return;
 
-    const mount = path.relative(root, KIT).split(path.sep).join('/');
+    // Seen from the project: lib/wisdom-kit, also when it is a link to a
+    // local checkout (project.local.sh), where KIT is the checkout's real path.
+    const linked = fs.existsSync(path.join(root, KIT_MOUNT))
+        && fs.realpathSync(path.join(root, KIT_MOUNT)) === fs.realpathSync(KIT);
+    const mount = linked ? KIT_MOUNT : path.relative(root, KIT).split(path.sep).join('/');
     if (!text.includes(`${mount}/kit.hxml`)) {
         problems.push(`build.hxml: should include ${mount}/kit.hxml`);
     }
+
+}
+
+/**
+ * Local checkouts (project.local.sh). Out of date: a reminder. With
+ * --release, which the export scripts pass: a refusal unless every local
+ * checkout is exactly a pushed commit the project records, or the kit pins,
+ * so a shipped build is one anybody can rebuild.
+ */
+function checkLocalCheckouts() {
+
+    const local = readLocal(root);
+    if (!local.exists) return;
+
+    for (const line of staleness(root)) console.log(`  warning: ${line}: run npm run sync-local`);
+    if (!process.argv.includes('--release')) return;
+
+    const kit = fs.realpathSync(path.join(root, KIT_MOUNT));
+    const checkouts = [];
+    if (local.kit) checkouts.push([local.kit, recorded(root, KIT_MOUNT), 'recorded by the project']);
+    for (const name of Object.keys(LIBRARIES)) {
+        const dir = local.libraries[name];
+        if (dir) checkouts.push([dir, pinned(kit, `lib/${name}`), 'pinned by the kit']);
+    }
+
+    const before = problems.length;
+    for (const [dir, expected, by] of checkouts) {
+        const label = path.relative(root, dir);
+        const at = head(dir);
+        if (at !== expected) problems.push(`${label} is on ${short(at)}, not ${short(expected)} ${by}`);
+        if (!onRemote(dir, at)) problems.push(`${label} ${short(at)} is on no remote branch`);
+        for (const w of checkoutWarnings(dir, label)) {
+            if (w.includes('uncommitted')) problems.push(w);
+        }
+    }
+    localProblems = problems.length - before;
 
 }
 

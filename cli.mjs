@@ -49,6 +49,7 @@ const COMMANDS = {
     'check-config': () => node('check-config.mjs', rest),
 
     'sync-config': () => node('sync-config.mjs', rest),
+    'sync-local': () => node('sync-local.mjs', rest),
     'sync-version': () => node('sync-version.mjs', rest),
 
     clean: () => node('clean.mjs', rest),
@@ -71,6 +72,10 @@ const COMMANDS = {
         // step is idempotent and only rewrites the dev links, so it is cheap
         // to run before every full build and re-heals a stale checkout.
         if (!rest.includes('--quiet')) node('setup-haxelibs.mjs', ['--soft']);
+
+        // Local checkouts (project.local.sh) that moved since the last
+        // sync-local. Read-only: a reminder, never a change.
+        node('check-local.mjs', []);
 
         // Names first: sync-version finds the crate in Cargo.lock by the
         // name sync-config writes.
@@ -197,6 +202,7 @@ The wisdom-kit command line. Run from a project directory.
 
   check-config      verify every file agrees with project.config.sh
   sync-config       push project.config.sh's names into npm, Cargo and Tauri
+  sync-local        use the local checkouts named in project.local.sh
   sync-version      push package.json's version into Cargo and Tauri
   generate-icons    rebuild the desktop icons from APP_ICON or resources/AppIcon.png
 

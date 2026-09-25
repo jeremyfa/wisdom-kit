@@ -25,3 +25,7 @@ node_modules/
 .idea/
 .vscode/settings.json
 .vscode/settings.local.json
+
+# This machine's local checkouts of the kit and its libraries, used instead of
+# the submodules. See project.local.sh.example and `npm run sync-local`.
+project.local.sh
