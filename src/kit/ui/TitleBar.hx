@@ -47,7 +47,7 @@ class TitleBar extends Component {
     function render() '<>
         <div
             data-tauri-drag-region="deep"
-            class="relative shrink-0 flex items-center gap-2 px-3 h-12 border-b border-t-border bg-t-surface"
+            class="relative shrink-0 flex items-center gap-2 px-3 h-9 border-b border-t-border bg-t-surface"
         >
             // Room for the macOS traffic lights, which float over this bar.
             // Kept as a real element rather than as padding on the container,
@@ -68,12 +68,12 @@ class TitleBar extends Component {
 
             <if ${needsWindowButtons()}>
                 <div class="flex items-center gap-1 ml-2 pl-2 border-l border-t-border" data-tauri-drag-region="false">
-                    <IconButton kind="minus" title="Minimize"
+                    <IconButton kind="minus" title="Minimize" size="small"
                                 onpress=${() -> Platform.minimizeWindow()} />
-                    <IconButton kind=${chrome.windowMaximized ? "copy" : "square"}
+                    <IconButton kind=${chrome.windowMaximized ? "copy" : "square"} size="small"
                                 title=${chrome.windowMaximized ? "Restore" : "Maximize"}
                                 onpress=${() -> Platform.toggleMaximizeWindow()} />
-                    <IconButton kind="x" title="Close" tone="danger"
+                    <IconButton kind="x" title="Close" tone="danger" size="small"
                                 onpress=${() -> Platform.closeWindow()} />
                 </div>
             </if>
@@ -84,13 +84,15 @@ class TitleBar extends Component {
      * macOS only, and only while the traffic lights are actually on screen.
      *
      * The numbers here and in tauri.conf.json are a matched pair, measured
-     * against this bar's 48px height rather than guessed:
+     * against this bar's 36px height rather than guessed. sync-config writes
+     * the trafficLightPosition half into every project (TRAFFIC_LIGHTS):
      *
-     *   trafficLightPosition x=14  puts the buttons at x 14..73
+     *   trafficLightPosition x=14  puts the buttons at x 20..73.5
      *   this 74px spacer + the bar's 12px of padding + an 8px gap
      *                              puts the content at x 94, a clear 20px away
-     *   trafficLightPosition y=26  centres the buttons at y 23.8, against a
-     *                              bar centre of 24
+     *   trafficLightPosition y=20  centres the buttons at y 18, against the
+     *                              content's centre of 17.5 (above the 1px
+     *                              bottom border)
      *
      * That y is NOT the top of the buttons. macOS applies it as an offset
      * from its own default, so it reads about nine pixels higher than the

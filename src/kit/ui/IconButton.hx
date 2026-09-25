@@ -31,6 +31,12 @@ class IconButton extends Component {
 
     @props var onpress:() -> Void = null;
 
+    /**
+     * "default" (32px) or "small" (28px), which the title bar uses: its 36px
+     * height leaves a default button no room around it.
+     */
+    @props var size:String = 'default';
+
     function render() '<>
         <button
             type="button"
@@ -41,13 +47,15 @@ class IconButton extends Component {
             onclick=${(_) -> if (!disabled && onpress != null) onpress()}
             class=${classes()}
         >
-            <Icon kind=${kind} size=15 display="" />
+            <Icon kind=${kind} size=${size == 'small' ? 14 : 15} display="" />
         </button>
     ';
 
     function classes():String {
 
-        final base = 'inline-flex items-center justify-center w-8 h-8 shrink-0 rounded-lg transition-colors ';
+        // Whole literals per size, because Tailwind reads source text.
+        final box = size == 'small' ? 'w-7 h-7 rounded-md ' : 'w-8 h-8 rounded-lg ';
+        final base = 'inline-flex items-center justify-center shrink-0 transition-colors ' + box;
 
         if (disabled) return base + 'text-t-text-faint cursor-not-allowed';
         if (active) return base + 'text-t-accent bg-t-accent-soft cursor-pointer';

@@ -41,7 +41,7 @@ class Main implements X {
                             <span class="text-[14px] font-semibold truncate">Wisdom App</span>
                             <div class="flex-1"></div>
                             <div class="flex items-center gap-1" data-tauri-drag-region="false">
-                                <IconButton kind="settings"
+                                <IconButton kind="settings" size="small"
                                             title=${'Settings (' + Keys.modifierLabel() + ',)'}
                                             onpress=${() -> chrome.settingsOpen = true} />
                             </div>

@@ -14,6 +14,8 @@
  *                        [lib].name                APP_LIB_NAME
  *   Cargo.lock           the project's own crate   APP_CRATE_NAME
  *   src/main.rs          <lib>::run()              APP_LIB_NAME
+ *   tauri.conf.json      trafficLightPosition      TRAFFIC_LIGHTS below, which
+ *                                                  matches kit.ui.TitleBar
  *
  * The Haxe side reads project.config.sh directly at compile time through
  * kit.macros.ConfigMacro (App.SLUG, App.ICON), so it needs nothing written.
@@ -49,6 +51,13 @@ catch (error) {
 }
 
 const changes = [];
+
+/**
+ * Where macOS draws the window buttons over kit.ui.TitleBar. Measured against
+ * that bar's height (see TitleBar.needsTrafficLightInset), so it belongs to
+ * the kit and is written here rather than kept by hand in every project.
+ */
+const TRAFFIC_LIGHTS = { x: 14, y: 20 };
 
 syncPackageJson();
 syncPackageLock();
@@ -94,7 +103,9 @@ function syncTauriConf() {
         text = replaceJsonString(text, 'identifier', config.APP_IDENTIFIER, 1);
         text = replaceJsonString(text, 'productName', config.APP_PRODUCT_NAME, 1);
         // The first "title" is the main window's, the one check-config reads.
-        return replaceJsonString(text, 'title', config.APP_PRODUCT_NAME, 1);
+        text = replaceJsonString(text, 'title', config.APP_PRODUCT_NAME, 1);
+        return text.replace(/("trafficLightPosition"\s*:\s*)\{[^}]*\}/,
+            `$1{ "x": ${TRAFFIC_LIGHTS.x}, "y": ${TRAFFIC_LIGHTS.y} }`);
     });
 
 }
