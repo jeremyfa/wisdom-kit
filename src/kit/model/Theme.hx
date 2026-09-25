@@ -25,7 +25,7 @@ class Theme extends Model {
 
 /// Surfaces
 
-    @observe public var background:String = '#ffffff';
+    @observe public var background:String = '#fafafa';
     @observe public var surface:String = '#ffffff';
     @observe public var surface2:String = '#f4f4f5';
     @observe public var border:String = '#e4e4e7';
