@@ -53,17 +53,18 @@ class TitleBar extends Component {
             // Kept as a real element rather than as padding on the container,
             // so that it simply disappears in fullscreen and everything slides
             // left with nothing else moving.
-            <if ${needsTrafficLightInset()}>
-                <div class="w-[74px] shrink-0"></div>
-            </if>
+            //
+            // Always mounted, only hidden: removing it would shift every child
+            // after it by one, and wisdom would then match those children to
+            // the wrong nodes, losing the first one in fullscreen.
+            <div class=${needsTrafficLightInset() ? "w-[74px] shrink-0" : "hidden"}></div>
 
             $children
 
-            <if ${centerTitle != null}>
-                <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[33%] truncate text-[13px] text-t-text-muted pointer-events-none">
-                    ${centerTitle}
-                </div>
-            </if>
+            // Always mounted too, for the same reason.
+            <div class=${centerTitle != null ? "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[33%] truncate text-[13px] text-t-text-muted pointer-events-none" : "hidden"}>
+                ${centerTitle != null ? centerTitle : ""}
+            </div>
 
             <if ${needsWindowButtons()}>
                 <div class="flex items-center gap-1 ml-2 pl-2 border-l border-t-border" data-tauri-drag-region="false">
