@@ -224,6 +224,22 @@ artifact_name() {
     fi
 }
 
+# Zip the folder <name> found in <parent> into <parent>/<name>.zip, with the
+# folder as the archive's single top-level entry. zip where it exists, which
+# is macOS and most Linux systems, else PowerShell's Compress-Archive, which
+# every Windows has (Git Bash, and the Windows CI runner, have no zip).
+zip_folder() {
+    local parent="$1" name="$2"
+    if command -v zip >/dev/null 2>&1; then
+        ( cd "$parent" && zip -qr "$name.zip" "$name" )
+    elif command -v powershell.exe >/dev/null 2>&1; then
+        ( cd "$parent" && powershell.exe -NoProfile -NonInteractive -Command \
+            "Compress-Archive -Path '$name' -DestinationPath '$name.zip' -Force" )
+    else
+        die "no zip and no PowerShell to make $name.zip" "Install zip."
+    fi
+}
+
 ## Build steps
 
 ensure_bundles_dir() {

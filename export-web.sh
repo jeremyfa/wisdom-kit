@@ -18,17 +18,13 @@ set -euo pipefail
 prepare_build
 build_frontend
 
-need_cmd zip "Install zip, or package dist/web by hand."
-
 ensure_bundles_dir
 NAME="$ARTIFACT_PREFIX-v$VERSION-web"
 STAGE="$BUNDLES_DIR/$NAME"
 
 rm -rf "$STAGE" "$BUNDLES_DIR/$NAME.zip"
 cp -R "$ROOT_DIR/dist/web" "$STAGE"
-# Zipped from inside dist/bundles so the archive's single top-level entry is
-# the folder name, not an absolute path.
-( cd "$BUNDLES_DIR" && zip -qr "$NAME.zip" "$NAME" )
+zip_folder "$BUNDLES_DIR" "$NAME"
 rm -rf "$STAGE"
 
 step "Built v$VERSION for the web"

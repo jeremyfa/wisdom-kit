@@ -115,10 +115,7 @@ rm -rf "$PORTABLE_DIR" "$BUNDLES_DIR/$PORTABLE_NAME.zip"
 mkdir -p "$PORTABLE_DIR"
 cp "$RAW_EXE" "$PORTABLE_DIR/${APP_PRODUCT_NAME}.exe"
 
-need_cmd zip "Install zip, or build the portable bundle on another host."
-# Zipped from inside dist/bundles so the archive's single top-level entry is
-# the folder name, not an absolute path.
-( cd "$BUNDLES_DIR" && zip -qr "$PORTABLE_NAME.zip" "$PORTABLE_NAME" )
+zip_folder "$BUNDLES_DIR" "$PORTABLE_NAME"
 rm -rf "$PORTABLE_DIR"
 
 step "Built v$VERSION for windows-x64"

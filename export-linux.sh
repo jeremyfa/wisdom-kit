@@ -217,6 +217,15 @@ else
         "$APPIMAGE_IMAGE" \
         cargo tauri build --target "$RUST_TARGET" --bundles appimage --config "$CONFIG_OVERRIDE"
 
+    # The containers run as root, so on a Linux host what they wrote belongs
+    # to root, and the renames below fail with "Permission denied". Docker
+    # Desktop on macOS maps ownership back to the user, so only Linux needs
+    # this. Done from a container, because only root may chown the files.
+    if [ "$HOST" = "linux" ]; then
+        docker run --rm --platform "$DOCKER_PLATFORM" -v "$ROOT_DIR:/workspace" "$APPIMAGE_IMAGE" \
+            chown -R "$(id -u):$(id -g)" /workspace/src-tauri
+    fi
+
 fi
 
 ## Rename to the project convention
