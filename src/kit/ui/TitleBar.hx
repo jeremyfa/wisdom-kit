@@ -33,10 +33,21 @@ import wisdom.Component;
  */
 class TitleBar extends Component {
 
+    /**
+     * Optional text centred on the whole bar, whatever sits on either side:
+     * typically the name of the open document, the way native windows centre
+     * their title. Null shows nothing.
+     *
+     * It ignores the pointer, so the bar still drags from under it, and it
+     * never takes more than a third of the bar, so it cannot run into the
+     * content at either end.
+     */
+    @props var centerTitle:String = null;
+
     function render() '<>
         <div
             data-tauri-drag-region="deep"
-            class="shrink-0 flex items-center gap-2 px-3 h-12 border-b border-t-border bg-t-surface"
+            class="relative shrink-0 flex items-center gap-2 px-3 h-12 border-b border-t-border bg-t-surface"
         >
             // Room for the macOS traffic lights, which float over this bar.
             // Kept as a real element rather than as padding on the container,
@@ -47,6 +58,12 @@ class TitleBar extends Component {
             </if>
 
             $children
+
+            <if ${centerTitle != null}>
+                <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[33%] truncate text-[13px] text-t-text-muted pointer-events-none">
+                    ${centerTitle}
+                </div>
+            </if>
 
             <if ${needsWindowButtons()}>
                 <div class="flex items-center gap-1 ml-2 pl-2 border-l border-t-border" data-tauri-drag-region="false">
