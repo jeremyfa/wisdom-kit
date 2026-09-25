@@ -166,7 +166,12 @@ export function staleness(root) {
 
     if (local.kit) {
         if (!isLinkTo(mount, local.kit)) stale.push(`${KIT_MOUNT} does not point at ${path.relative(root, local.kit)}`);
-        else if (recorded(root, KIT_MOUNT) !== head(local.kit)) stale.push(`${KIT_MOUNT} records another commit than ${path.relative(root, local.kit)}`);
+        else if (recorded(root, KIT_MOUNT) !== head(local.kit)) {
+            const at = head(local.kit);
+            stale.push(onRemote(local.kit, at)
+                ? `${KIT_MOUNT} records another commit than ${path.relative(root, local.kit)}`
+                : `${path.relative(root, local.kit)} is on ${short(at)}, not pushed yet: push it first`);
+        }
     }
     else if (linked) {
         stale.push(`${KIT_MOUNT} is still a link, but ${LOCAL_FILE} no longer asks for one`);
