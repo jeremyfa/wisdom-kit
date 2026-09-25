@@ -88,6 +88,14 @@ function checkTauriConf() {
         problems.push(`${file}: app.withGlobalTauri must be true, or Platform falls back to the web backend`);
     }
 
+    // The installers embed it (the macOS disk image as its EULA, the Windows
+    // installer as its licence page), and a missing one only fails at the very
+    // end of a desktop build, several minutes in.
+    const license = conf.bundle && conf.bundle.licenseFile;
+    if (license && !fs.existsSync(path.resolve(root, 'src-tauri', license))) {
+        problems.push(`${file}: bundle.licenseFile ${license} does not exist`);
+    }
+
     // dist/web is simultaneously the web build and the desktop frontend. Two
     // directories would be two chances to ship something untested.
     expect(file, 'build.frontendDist', conf.build && conf.build.frontendDist, '../dist/web');
