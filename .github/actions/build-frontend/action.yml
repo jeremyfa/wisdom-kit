@@ -9,6 +9,14 @@ inputs:
     description: Build minified with dead code elimination
     required: false
     default: 'true'
+  prebuilt:
+    description: >
+      dist/web was already built by another job and downloaded here. Only
+      install what the desktop build needs: Node and the npm packages, no Haxe
+      and no compilation. Also what lets a desktop job run where Haxe has no
+      release, such as Linux on ARM.
+    required: false
+    default: 'false'
 
 runs:
   using: composite
@@ -39,11 +47,13 @@ runs:
     # Versions come from the files in the repository, never from a literal
     # here, so a local build and a CI build use the same toolchain.
     - name: Read the Haxe version
+      if: inputs.prebuilt != 'true'
       id: haxe-version
       shell: bash
       run: echo "version=$(cat .haxe-version)" >> "$GITHUB_OUTPUT"
 
     - name: Set up Haxe
+      if: inputs.prebuilt != 'true'
       uses: krdlab/setup-haxe@v2
       with:
         haxe-version: ${{ steps.haxe-version.outputs.version }}
@@ -52,14 +62,21 @@ runs:
       shell: bash
       # `npm ci` runs postinstall, which is where setup-haxelibs.mjs links the
       # submodules into a project-local haxelib repository. Nothing is
-      # downloaded from haxelib.
-      run: npm ci
+      # downloaded from haxelib. With a prebuilt frontend there is no Haxe, so
+      # postinstall is skipped.
+      run: |
+        if [ "${{ inputs.prebuilt }}" = "true" ]; then
+          npm ci --ignore-scripts
+        else
+          npm ci
+        fi
 
     - name: Check the configuration
       shell: bash
       run: npm run check-config
 
     - name: Build
+      if: inputs.prebuilt != 'true'
       shell: bash
       run: |
         if [ "${{ inputs.release }}" = "true" ]; then

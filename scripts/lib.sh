@@ -251,7 +251,15 @@ prepare_build() {
 # not Haxe. dist/web is a bind mount, so what the host compiles is what the
 # container bundles, and it is the identical directory a browser would be
 # served, which is the point of having only one output.
+# KIT_PREBUILT_FRONTEND=1 uses the dist/web already there instead: CI builds
+# the frontend once and hands it to each desktop job, some of which run where
+# Haxe has no release (Linux on ARM).
 build_frontend() {
+    if [ "${KIT_PREBUILT_FRONTEND:-0}" = "1" ]; then
+        [ -f "$ROOT_DIR/dist/web/index.html" ] || die "KIT_PREBUILT_FRONTEND=1, but there is no dist/web/index.html"
+        step "Using the prebuilt frontend in dist/web"
+        return 0
+    fi
     need_cmd npm "Install Node (see .nvmrc for the expected version)."
     step "Building frontend (haxe + tailwind) on the host"
     node "$KIT_DIR/cli.mjs" build --release
