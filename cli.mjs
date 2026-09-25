@@ -99,7 +99,7 @@ const COMMANDS = {
 
     export: () => {
         const target = rest[0];
-        const valid = ['mac', 'linux', 'windows', 'all'];
+        const valid = ['mac', 'linux', 'windows', 'web', 'all'];
         if (!valid.includes(target)) {
             fail(`export needs one of: ${valid.join(', ')}`);
         }
@@ -229,6 +229,7 @@ The wisdom-kit command line. Run from a project directory.
   export mac        macOS universal, signed
   export linux      .deb, .rpm, .AppImage      (x64 | arm64)
   export windows    NSIS installer and a portable zip
+  export web        the web build as a zip, for any web host
   export all        everything this host can build
   sign-mac          notarize and staple
   publish-itchio    push dist/bundles to itch.io

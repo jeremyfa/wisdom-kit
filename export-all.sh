@@ -30,7 +30,7 @@ while [ $# -gt 0 ]; do
         --only) shift; ONLY="${1:-}" ;;
         --only=*) ONLY="${1#--only=}" ;;
         *) die "unknown argument: $1" \
-               "Usage: ./export-all.sh [--no-sign] [--only mac,linux,windows]" ;;
+               "Usage: ./export-all.sh [--no-sign] [--only mac,linux,windows,web]" ;;
     esac
     shift
 done
@@ -60,7 +60,11 @@ if wants windows; then
     DO_WINDOWS=1
 fi
 
-if [ "$DO_MAC$DO_LINUX$DO_WINDOWS" = "000" ]; then
+# Every host can package the web build.
+DO_WEB=0
+if wants web; then DO_WEB=1; fi
+
+if [ "$DO_MAC$DO_LINUX$DO_WINDOWS$DO_WEB" = "0000" ]; then
     die "nothing to build on this host ($HOST) with --only '$ONLY'"
 fi
 
@@ -101,6 +105,7 @@ TASKS=()
 [ "$DO_MAC" = "1" ] && [ "$SIGN" = "1" ] && TASKS+=("macOS notarization")
 [ "$DO_LINUX" = "1" ]   && TASKS+=("Linux arm64" "Linux x64")
 [ "$DO_WINDOWS" = "1" ] && TASKS+=("Windows x64")
+[ "$DO_WEB" = "1" ]     && TASKS+=("Web")
 
 TOTAL=${#TASKS[@]}
 INDEX=0
@@ -129,6 +134,11 @@ fi
 if [ "$DO_WINDOWS" = "1" ]; then
     next "Windows x64"
     ./export-windows.sh
+fi
+
+if [ "$DO_WEB" = "1" ]; then
+    next "Web"
+    ./export-web.sh
 fi
 
 ## Report

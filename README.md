@@ -49,7 +49,7 @@ The full list:
 | `npm run sync-local` | use the local checkouts named in `project.local.sh` |
 | `npm run sync-version` | copy `package.json`'s version into Cargo and Tauri |
 | `npm run generate-icons` | draw the desktop icons from `APP_ICON`, or `resources/AppIcon.png` |
-| `npm run export mac` | build distributables (also `linux`, `windows`, `all`) |
+| `npm run export mac` | build distributables (also `linux`, `windows`, `web`, `all`) |
 | `npm run sign-mac` | notarize and staple the macOS build |
 
 These all run through the kit rather than being spelled out in your
