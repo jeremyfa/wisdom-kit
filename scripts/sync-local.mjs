@@ -60,6 +60,7 @@ function syncKit() {
 
     if (!local.kit) {
         unlinkKit();
+        configureRecursion(false);
         return;
     }
 
@@ -68,6 +69,7 @@ function syncKit() {
     }
 
     linkKit();
+    configureRecursion(true);
     recordKit();
     warnings.push(...checkoutWarnings(local.kit, path.relative(root, local.kit)));
 
@@ -178,6 +180,28 @@ function commitPointer(sha, message) {
     }
     finally {
         fs.rmSync(path.dirname(index), { recursive: true, force: true });
+    }
+
+}
+
+/**
+ * git fetch, pull and checkout recurse into submodules by default, and stop
+ * on the link with "expected submodule path ... not to be a symbolic link".
+ * While the kit is a link, this project's own git config turns that off;
+ * back to the submodule, the defaults return. Nothing else is touched.
+ */
+function configureRecursion(linked) {
+
+    for (const key of ['fetch.recurseSubmodules', 'submodule.recurse']) {
+        const current = git(root, ['config', '--local', '--get', key]);
+        if (linked && current !== 'false') {
+            gitOrFail(root, ['config', '--local', key, 'false']);
+            report.push(`git config ${key} false (while ${KIT_MOUNT} is a link)`);
+        }
+        if (!linked && current === 'false') {
+            gitOrFail(root, ['config', '--local', '--unset', key]);
+            report.push(`git config ${key} back to its default`);
+        }
     }
 
 }
