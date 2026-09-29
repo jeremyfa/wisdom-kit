@@ -45,8 +45,19 @@ done
 prepare_build
 build_frontend
 
+# The disk image reads a plain text licence as MacRoman and garbles anything
+# past ASCII, so it gets an RTF copy. The Windows installer keeps the original.
+LICENSE_RTF=$(node "$KIT_DIR/scripts/license-rtf.mjs" "$ROOT_DIR" \
+    "$ROOT_DIR/src-tauri/target/universal-apple-darwin/license")
+TAURI_CONFIG=()
+if [ -n "$LICENSE_RTF" ]; then
+    TAURI_CONFIG=(--config "{\"bundle\":{\"licenseFile\":\"$LICENSE_RTF\"}}")
+fi
+
 step "Building universal macOS bundle"
-node "$KIT_DIR/cli.mjs" tauri build --target universal-apple-darwin
+# The +"..." form, because bash 3.2 under set -u rejects an empty array.
+node "$KIT_DIR/cli.mjs" tauri build --target universal-apple-darwin \
+    ${TAURI_CONFIG[@]+"${TAURI_CONFIG[@]}"}
 
 BUNDLE_DIR="$ROOT_DIR/src-tauri/target/universal-apple-darwin/release/bundle"
 APP_PATH="$BUNDLE_DIR/macos/$APP_PRODUCT_NAME.app"
