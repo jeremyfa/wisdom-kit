@@ -59,8 +59,9 @@ if (report.length === 0 && warnings.length === 0) console.log('  nothing to sync
 function syncKit() {
 
     if (!local.kit) {
-        unlinkKit();
+        // Before unlinking, so its submodule update is not skipped.
         configureRecursion(false);
+        unlinkKit();
         return;
     }
 
@@ -187,18 +188,25 @@ function commitPointer(sha, message) {
 /**
  * git fetch, pull and checkout recurse into submodules by default, and stop
  * on the link with "expected submodule path ... not to be a symbolic link".
- * While the kit is a link, this project's own git config turns that off;
- * back to the submodule, the defaults return. Nothing else is touched.
+ * So does `git submodule update`, which git clients such as Fork run after
+ * every pull. While the kit is a link, this project's own git config turns
+ * all of that off; back to the submodule, the defaults return. Nothing else
+ * is touched.
  */
 function configureRecursion(linked) {
 
-    for (const key of ['fetch.recurseSubmodules', 'submodule.recurse']) {
+    const settings = [
+        ['fetch.recurseSubmodules', 'false'],
+        ['submodule.recurse', 'false'],
+        [`submodule.${KIT_MOUNT}.update`, 'none']
+    ];
+    for (const [key, value] of settings) {
         const current = git(root, ['config', '--local', '--get', key]);
-        if (linked && current !== 'false') {
-            gitOrFail(root, ['config', '--local', key, 'false']);
-            report.push(`git config ${key} false (while ${KIT_MOUNT} is a link)`);
+        if (linked && current !== value) {
+            gitOrFail(root, ['config', '--local', key, value]);
+            report.push(`git config ${key} ${value} (while ${KIT_MOUNT} is a link)`);
         }
-        if (!linked && current === 'false') {
+        if (!linked && current === value) {
             gitOrFail(root, ['config', '--local', '--unset', key]);
             report.push(`git config ${key} back to its default`);
         }
