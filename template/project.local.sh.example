@@ -14,3 +14,7 @@ KIT_LOCAL_DIR="../wisdom-kit"
 WISDOM_LOCAL_DIR="../wisdom"
 TRACKER_LOCAL_DIR="../tracker"
 FACILE_LOCAL_DIR="../facile"
+#
+# Only if you maintain the kit: sync-local then also pins the libraries'
+# pushed commits in the kit, and commits and pushes the kit.
+# KIT_UPDATE_PINS="1"

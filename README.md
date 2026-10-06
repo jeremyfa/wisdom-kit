@@ -92,6 +92,9 @@ npm run sync-local
   own pointers to them are left alone, since a project may not be allowed to
   commit to the kit: `sync-local` reports a checkout that is not on the version
   the kit pins, and whoever maintains the kit updates it there.
+- If you maintain the kit, add `KIT_UPDATE_PINS="1"`: each run then also pins
+  the libraries' pushed commits in the kit, commits and pushes it, and records
+  it in the project, so one command leaves everything consistent.
 - Remove a line, or the whole file, and run it again to go back to the
   submodule, on the commit last recorded.
 

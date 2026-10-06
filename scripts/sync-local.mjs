@@ -26,6 +26,13 @@
  *
  * Never commits to the kit or to a library: a project may not have the right
  * to. See local.mjs.
+ *
+ * Unless KIT_UPDATE_PINS="1", for whoever maintains the kit. Then, before the
+ * above, each library checkout on a pushed commit other than the one the kit
+ * pins becomes the kit's new pin: committed in the kit as "Update <names>",
+ * that pointer only, and the kit is pushed. The project then records that
+ * kit commit as usual, so one run leaves everything consistent. The libraries
+ * themselves are never committed to or pushed.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -46,6 +53,7 @@ const warnings = [];
 
 if (!git(root, ['rev-parse', '--git-dir'])) fail(`${root} is not a git repository`);
 
+if (local.updatePins) updatePins();
 syncKit();
 setupHaxelibs();
 checkLibraries();
@@ -225,6 +233,92 @@ function unlinkKit() {
 
 }
 
+/// The kit's pins, with KIT_UPDATE_PINS="1"
+
+/**
+ * Moves the kit's pointers to the library checkouts that moved, commits them
+ * in the kit and pushes it. Stops short, with a warning, whenever pushing
+ * would not be safe: the kit on no branch or behind its remote.
+ */
+function updatePins() {
+
+    const kit = local.kit;
+    if (!kit) {
+        warnings.push('KIT_UPDATE_PINS="1" needs KIT_LOCAL_DIR: the kit to commit to');
+        return;
+    }
+    const kitLabel = path.relative(root, kit);
+
+    const moves = [];
+    for (const [name, dir] of Object.entries(local.libraries)) {
+        if (!dir) continue;
+        const at = head(dir);
+        const pin = pinned(kit, `lib/${name}`);
+        if (!at || at === pin) continue;
+        git(dir, ['fetch', '-q', '--no-recurse-submodules']);
+        if (!onRemote(dir, at)) {
+            warnings.push(`${path.relative(root, dir)} ${short(at)} is not pushed: push it, then run this again ` +
+                `to pin it in the kit`);
+            continue;
+        }
+        moves.push({ name, at, pin });
+    }
+    if (moves.length === 0) return;
+
+    const branch = git(kit, ['symbolic-ref', '-q', '--short', 'HEAD']);
+    if (!branch) {
+        warnings.push(`${kitLabel} is on a detached HEAD: the kit's pins were not updated`);
+        return;
+    }
+    git(kit, ['fetch', '-q', '--no-recurse-submodules']);
+    const behind = git(kit, ['rev-list', '--count', 'HEAD..@{upstream}']);
+    if (behind == null) {
+        warnings.push(`${kitLabel} branch ${branch} has no upstream: the kit's pins were not updated`);
+        return;
+    }
+    if (behind !== '0') {
+        warnings.push(`${kitLabel} is ${behind} commit(s) behind its remote: pull it, then run this again`);
+        return;
+    }
+
+    const message = `Update ${moves.map(m => m.name).join(' and ')}`;
+    commitInKit(kit, moves, message);
+    for (const { name, at, pin } of moves) {
+        // The kit's own index and submodule checkout follow, so its status
+        // stays clean. The checkout is not used here, only kept in step.
+        gitOrFail(kit, ['update-index', '--cacheinfo', `160000,${at},lib/${name}`]);
+        git(kit, ['submodule', 'update', '-q', '--init', '--', `lib/${name}`]);
+        report.push(`${kitLabel} lib/${name} ${short(pin)} -> ${short(at)}`);
+    }
+    report.push(`${kitLabel} committed "${message}"`);
+
+    gitOrFail(kit, ['push', '-q']);
+    report.push(`${kitLabel} pushed ${branch}`);
+
+}
+
+/** Commits new library pins in the kit, from its HEAD tree in a scratch
+    index, so nothing else staged or changed in the kit goes into it. */
+function commitInKit(kit, moves, message) {
+
+    const index = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'sync-local-')), 'index');
+    const env = { ...process.env, GIT_INDEX_FILE: index };
+    const run = args => execFileSync('git', args, { cwd: kit, env, encoding: 'utf8' }).trim();
+    try {
+        run(['read-tree', 'HEAD']);
+        for (const { name, at } of moves) run(['update-index', '--cacheinfo', `160000,${at},lib/${name}`]);
+        const tree = run(['write-tree']);
+        const parent = run(['rev-parse', 'HEAD']);
+        const commit = execFileSync('git', ['commit-tree', tree, '-p', parent, '-m', message],
+            { cwd: kit, encoding: 'utf8' }).trim();
+        gitOrFail(kit, ['update-ref', '-m', `sync-local: ${message}`, 'HEAD', commit, parent]);
+    }
+    finally {
+        fs.rmSync(path.dirname(index), { recursive: true, force: true });
+    }
+
+}
+
 /// The libraries
 
 /** .haxelib, from the kit now in place. It reads project.local.sh itself. */
@@ -246,8 +340,8 @@ function checkLibraries() {
         report.push(`${name.padEnd(7)} -> ${label}  ${short(at)}` + (at === pin ? '  (the version the kit pins)' : ''));
         if (at !== pin) {
             warnings.push(`${label} is on ${short(at)}, but the kit pins ${short(pin)}: a clone of this project ` +
-                `builds with ${short(pin)}. To move the kit, whoever may commit to it updates lib/${name} in ` +
-                `${path.relative(root, kit)}, commits and pushes, then this runs again.`);
+                `builds with ${short(pin)}. To move the kit, whoever may commit to it sets KIT_UPDATE_PINS="1" ` +
+                `in ${LOCAL_FILE} and runs this again.`);
         }
         warnings.push(...checkoutWarnings(dir, label));
     }

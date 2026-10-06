@@ -18,8 +18,13 @@
  * they need no link: the project's .haxelib simply points at the checkouts.
  *
  * Nothing here writes to the kit or the libraries. A project may not be
- * allowed to, so the only thing ever committed is the project's own pointer
- * to the kit, by sync-local.
+ * allowed to, so by default the only thing ever committed is the project's
+ * own pointer to the kit, by sync-local. Whoever maintains the kit can add
+ *
+ *   KIT_UPDATE_PINS="1"
+ *
+ * and sync-local then also moves the kit's pointers to the libraries, and
+ * commits and pushes the kit.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -60,7 +65,8 @@ export function readLocal(root) {
     return {
         exists: fs.existsSync(file),
         kit: resolve('KIT_LOCAL_DIR'),
-        libraries
+        libraries,
+        updatePins: values.KIT_UPDATE_PINS === '1'
     };
 
 }
