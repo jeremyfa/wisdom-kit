@@ -295,6 +295,24 @@ ship something that quietly does nothing in the browser.
 Dialogs are drawn in the app, never with `window.confirm`, which freezes the
 page, ignores your theme, and is blocked by some browsers.
 
+To offer reloading the open file when another program changed it, turn on
+`ExternalChanges`. It reads the file again at startup and whenever the window
+comes back to the front, and asks before replacing anything:
+
+```haxe
+ExternalChanges.watch({
+    file: () -> model.document.ref(),
+    known: () -> model.document.diskHash,
+    setKnown: hash -> model.document.diskHash = hash,
+    unsaved: () -> model.document.unsaved,
+    reload: content -> reloadFrom(content)
+});
+```
+
+Set the remembered hash to `ExternalChanges.hash(content)` whenever you open
+or save the file, so your own writes never count as a change. It does nothing
+in a browser, which cannot read a file again.
+
 ## Third party
 
 Bundled into every app built on the kit:

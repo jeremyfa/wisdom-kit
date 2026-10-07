@@ -106,6 +106,22 @@ class TauriBackend implements PlatformBackend {
 
     }
 
+    public function readTextFile(ref:FileRef, onDone:(error:Dynamic, content:String) -> Void):Void {
+
+        if (ref == null || ref.path == null) {
+            onDone('This file has no path to read from.', null);
+            return;
+        }
+
+        final path = ref.path;
+        js.Syntax.code("
+            window.__TAURI__.fs.readTextFile({0})
+                .then(function (content) { {1}(null, content); })
+                .catch(function (err) { {1}(err, null); });
+        ", path, onDone);
+
+    }
+
     public function revealFile(ref:FileRef, onDone:(error:Dynamic) -> Void):Void {
 
         if (ref == null || ref.path == null) {

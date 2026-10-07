@@ -95,6 +95,9 @@ class Platform {
         onDone:(error:Dynamic, ref:FileRef) -> Void):Void
         backend.writeTextFile(ref, content, onDone);
 
+    public static inline function readTextFile(ref:FileRef, onDone:(error:Dynamic, content:String) -> Void):Void
+        backend.readTextFile(ref, onDone);
+
     public static inline function revealFile(ref:FileRef, onDone:(error:Dynamic) -> Void):Void
         backend.revealFile(ref, onDone);
 

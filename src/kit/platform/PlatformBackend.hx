@@ -49,6 +49,12 @@ interface PlatformBackend {
      */
     function writeTextFile(ref:FileRef, content:String, onDone:(error:Dynamic, ref:FileRef) -> Void):Void;
 
+    /**
+     * Read again a file obtained earlier, to see whether it changed.
+     * Requires `FILE_SYSTEM`: a browser has no path to read from, and errors.
+     */
+    function readTextFile(ref:FileRef, onDone:(error:Dynamic, content:String) -> Void):Void;
+
     /** Show the file in Finder or Explorer. Requires `REVEAL_IN_FOLDER`. */
     function revealFile(ref:FileRef, onDone:(error:Dynamic) -> Void):Void;
 

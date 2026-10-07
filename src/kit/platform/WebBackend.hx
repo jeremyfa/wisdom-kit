@@ -93,6 +93,13 @@ class WebBackend implements PlatformBackend {
 
     }
 
+    public function readTextFile(ref:FileRef, onDone:(error:Dynamic, content:String) -> Void):Void {
+
+        // A picked file cannot be read again once its input is gone.
+        onDone('Reading a file again needs FILE_SYSTEM.', null);
+
+    }
+
     public function revealFile(ref:FileRef, onDone:(error:Dynamic) -> Void):Void {
 
         onDone('Showing a file in the file manager needs the desktop app');
